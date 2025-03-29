@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import DOMPurify from 'dompurify';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface BlogContentProps {
   content: string;

@@ -4,7 +4,7 @@ import { useState, FormEvent, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Container from '../ui/Container';
 import BlogTitleInput from './form/BlogTitleInput';
-import AuthorInput from './form/AuthorInput';
+import AuthorSection from './form/AuthorSection';
 import CategorySelect from './form/CategorySelect';
 import TagsInput from './form/TagsInput';
 import ImageUpload from './form/ImageUpload';
@@ -13,12 +13,16 @@ import SubmitButton from './form/SubmitButton';
 import Heading from '../ui/Heading';
 import BlogSidebar from './BlogSidebar';
 import Navbar from '../ui/Navbar';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface BlogFormData {
   id: string;
   title: string;
-  author: string;
+  author: {
+    name: string;
+    bio: string;
+    imageUrl: string;
+  };
   category: string;
   content: string;
   imageUrl: string | null;
@@ -26,11 +30,79 @@ interface BlogFormData {
   createdAt: string;
 }
 
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      when: "beforeChildren",
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 10
+    }
+  }
+};
+
+const successVariants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 200,
+      damping: 20
+    }
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.8,
+    transition: {
+      duration: 0.2
+    }
+  }
+};
+
+// Add styled background pattern component
+const BackgroundPattern = () => (
+  <div className="absolute inset-0 -z-10 overflow-hidden">
+    {/* Top-right accent circle */}
+    <div className="absolute -top-24 -right-24 w-96 h-96 bg-accent-rose/5 rounded-full blur-3xl" />
+    
+    {/* Bottom-left accent circle */}
+    <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-accent-green/5 rounded-full blur-3xl" />
+    
+    {/* Decorative dots pattern */}
+    <div className="absolute top-1/4 right-1/4 w-64 h-64 opacity-20">
+      <div className="absolute w-2 h-2 bg-accent-rose rounded-full" style={{ top: '20%', left: '30%' }} />
+      <div className="absolute w-2 h-2 bg-accent-green rounded-full" style={{ top: '40%', left: '60%' }} />
+      <div className="absolute w-2 h-2 bg-accent-rose rounded-full" style={{ top: '60%', left: '20%' }} />
+      <div className="absolute w-2 h-2 bg-accent-green rounded-full" style={{ top: '80%', left: '50%' }} />
+    </div>
+  </div>
+);
+
 export default function BlogCreationForm() {
   const [formData, setFormData] = useState<BlogFormData>({
     id: uuidv4(),
     title: '',
-    author: '',
+    author: {
+      name: '',
+      bio: '',
+      imageUrl: '',
+    },
     category: '',
     content: '',
     imageUrl: null,
@@ -55,11 +127,37 @@ export default function BlogCreationForm() {
 
   // Input change handlers
   const handleInputChange = useCallback((name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      // Handle nested author object updates
+      if (name.startsWith('author.')) {
+        const field = name.split('.')[1];
+        return {
+          ...prev,
+          author: {
+            ...prev.author,
+            [field]: value
+          }
+        };
+      }
+      return { ...prev, [name]: value };
+    });
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   }, [errors]);
+
+  const handleAuthorImageChange = useCallback((file: File) => {
+    // In a real app, you would upload this file to a storage service
+    // For now, we'll create a temporary URL
+    const imageUrl = URL.createObjectURL(file);
+    setFormData(prev => ({
+      ...prev,
+      author: {
+        ...prev.author,
+        imageUrl
+      }
+    }));
+  }, []);
 
   const handleTagsChange = useCallback((tags: string[]) => {
     setFormData(prev => ({ ...prev, tags }));
@@ -79,6 +177,14 @@ export default function BlogCreationForm() {
     
     if (!formData.content.trim()) {
       newErrors.content = 'Blog content is required';
+    }
+
+    if (!formData.author.name.trim()) {
+      newErrors['author.name'] = 'Author name is required';
+    }
+
+    if (!formData.author.bio.trim()) {
+      newErrors['author.bio'] = 'Author bio is required';
     }
     
     setErrors(newErrors);
@@ -106,7 +212,11 @@ export default function BlogCreationForm() {
         setFormData({
           id: uuidv4(),
           title: '',
-          author: '',
+          author: {
+            name: '',
+            bio: '',
+            imageUrl: '',
+          },
           category: '',
           content: '',
           imageUrl: null,
@@ -126,78 +236,137 @@ export default function BlogCreationForm() {
   return (
     <>
       <Navbar />
-      <Container className="pt-24">
-        <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
-          <div className="lg:w-2/3 w-full">
-            <Heading level="h1" size="2xl" className="mb-8 text-center lg:text-left animate-fade-up">
+      <div className="relative min-h-screen bg-gradient-to-b from-background to-background-secondary">
+        <BackgroundPattern />
+        <Container className="pt-24 relative">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="relative mb-8"
+          >
+            <div className="absolute -top-6 -left-6 w-24 h-24 bg-accent-rose/10 rounded-full blur-2xl" />
+            <Heading level="h1" size="2xl" className="text-center lg:text-left relative">
               Create a New Blog
             </Heading>
-            
-            {isSuccess ? (
-              <div className="bg-green-100 dark:bg-green-900 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 p-4 rounded-lg mb-8 animate-fade">
-                <p className="font-medium text-center">Blog post saved successfully!</p>
-              </div>
-            ) : null}
-            
-            <div className="animate-slide-in-left">
-              <motion.form 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-                onSubmit={handleSubmit}
-                className="space-y-8"
+          </motion.div>
+
+          <motion.div 
+            className="flex flex-col lg:flex-row justify-between items-start gap-8"
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+          >
+            <motion.div 
+              className="lg:w-2/3 w-full"
+              variants={itemVariants}
+            >              
+              <AnimatePresence mode="wait">
+                {isSuccess && (
+                  <motion.div 
+                    className="bg-green-100 dark:bg-green-900 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 p-4 rounded-lg mb-8 relative overflow-hidden"
+                    variants={successVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-accent-green/10 to-transparent" />
+                    <p className="font-medium text-center relative z-10">Blog post saved successfully!</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              <motion.div 
+                variants={itemVariants}
+                className="relative p-8 bg-white/50 dark:bg-gray-900/50 rounded-2xl backdrop-blur-sm border border-accent-rose/10"
               >
-                <BlogTitleInput 
-                  value={formData.title}
-                  onChange={(value: string) => handleInputChange('title', value)}
-                  error={errors.title}
-                />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <AuthorInput 
-                    value={formData.author}
-                    onChange={(value: string) => handleInputChange('author', value)}
-                  />
+                <motion.form 
+                  onSubmit={handleSubmit}
+                  className="space-y-8 relative"
+                >
+                  <div className="absolute -top-4 -right-4 w-32 h-32 bg-accent-green/5 rounded-full blur-2xl" />
                   
-                  <CategorySelect 
-                    value={formData.category}
-                    onChange={(value: string) => handleInputChange('category', value)}
-                  />
+                  <motion.div variants={itemVariants} className="relative z-10">
+                    <BlogTitleInput 
+                      value={formData.title}
+                      onChange={(value: string) => handleInputChange('title', value)}
+                      error={errors.title}
+                    />
+                  </motion.div>
+                  
+                  <motion.div variants={itemVariants} className="relative z-10">
+                    <AuthorSection
+                      author={formData.author}
+                      onChange={handleInputChange}
+                      onImageChange={handleAuthorImageChange}
+                    />
+                  </motion.div>
+                  
+                  <motion.div variants={itemVariants} className="relative z-10">
+                    <CategorySelect 
+                      value={formData.category}
+                      onChange={(value: string) => handleInputChange('category', value)}
+                    />
+                  </motion.div>
+                  
+                  <motion.div variants={itemVariants} className="relative z-10">
+                    <RichTextEditor 
+                      value={formData.content}
+                      onChange={(value: string) => handleInputChange('content', value)}
+                      error={errors.content}
+                    />
+                  </motion.div>
+                  
+                  <motion.div variants={itemVariants} className="relative z-10">
+                    <ImageUpload 
+                      onImageUpload={handleImageUpload}
+                      currentImage={formData.imageUrl}
+                    />
+                  </motion.div>
+                  
+                  <motion.div variants={itemVariants} className="relative z-10">
+                    <TagsInput 
+                      tags={formData.tags}
+                      onChange={handleTagsChange}
+                    />
+                  </motion.div>
+                  
+                  <motion.div 
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="relative z-10"
+                  >
+                    <SubmitButton isSubmitting={isSubmitting} />
+                  </motion.div>
+                </motion.form>
+              </motion.div>
+            </motion.div>
+            
+            <motion.div 
+              className="lg:w-1/3 w-full"
+              variants={itemVariants}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <div className="lg:sticky lg:top-24 lg:w-full">
+                <div className="relative p-6 bg-white/50 dark:bg-gray-900/50 rounded-2xl backdrop-blur-sm border border-accent-green/10">
+                  <div className="absolute -top-4 -left-4 w-32 h-32 bg-accent-rose/5 rounded-full blur-2xl" />
+                  <div className="relative z-10">
+                    <BlogSidebar 
+                      wordCount={wordCount} 
+                      title={formData.title}
+                      content={formData.content}
+                      image={formData.imageUrl || undefined}
+                    />
+                  </div>
                 </div>
-                
-                <RichTextEditor 
-                  value={formData.content}
-                  onChange={(value: string) => handleInputChange('content', value)}
-                  error={errors.content}
-                />
-                
-                <ImageUpload 
-                  onImageUpload={handleImageUpload}
-                  currentImage={formData.imageUrl}
-                />
-                
-                <TagsInput 
-                  tags={formData.tags}
-                  onChange={handleTagsChange}
-                />
-                
-                <SubmitButton isSubmitting={isSubmitting} />
-              </motion.form>
-            </div>
-          </div>
-          
-          <div className="lg:w-1/3 w-full mt-4 lg:mt-0 animate-slide-in-right">
-            <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar pr-2 pb-8 lg:pl-4">
-              <BlogSidebar 
-                wordCount={wordCount} 
-                title={formData.title}
-                content={formData.content}
-                image={formData.imageUrl || undefined}
-              />
-            </div>
-          </div>
-        </div>
-      </Container>
+              </div>
+            </motion.div>
+          </motion.div>
+        </Container>
+      </div>
     </>
   );
 } 
