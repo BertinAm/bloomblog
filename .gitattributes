@@ -1,0 +1,161 @@
+# Set default behavior to automatically normalize line endings
+* text=auto eol=lf
+
+# Force batch scripts to use CRLF
+*.{cmd,[cC][mM][dD]} text eol=crlf
+*.{bat,[bB][aA][tT]} text eol=crlf
+
+# Force bash scripts to use LF
+*.sh text eol=lf
+
+# Source code
+*.coffee text
+*.css text
+*.htm text
+*.html text
+*.js text
+*.json text
+*.jsx text
+*.less text
+*.ls text
+*.map text
+*.od text
+*.onlydata text
+*.php text
+*.pl text
+*.ps1 text
+*.py text
+*.rb text
+*.sass text
+*.scm text
+*.scss text
+*.ts text
+*.tsx text
+*.xml text
+*.xhtml text
+
+# Documentation
+*.markdown text
+*.md text
+*.mdwn text
+*.mdown text
+*.mkd text
+*.mkdn text
+*.mdtxt text
+*.mdtext text
+*.txt text
+AUTHORS text
+CHANGELOG text
+CHANGES text
+CONTRIBUTING text
+COPYING text
+copyright text
+*COPYRIGHT* text
+INSTALL text
+license text
+LICENSE text
+NEWS text
+readme text
+*README* text
+TODO text
+
+# Templates
+*.dot text
+*.ejs text
+*.haml text
+*.handlebars text
+*.hbs text
+*.hbt text
+*.jade text
+*.latte text
+*.mustache text
+*.njk text
+*.phtml text
+*.tmpl text
+*.tpl text
+*.twig text
+
+# Configs
+*.cnf text
+*.conf text
+*.config text
+.editorconfig text
+.env text
+.gitattributes text
+.gitconfig text
+.htaccess text
+*.lock text -diff
+package.json text
+package-lock.json text -diff
+pnpm-lock.yaml text -diff
+yarn.lock text -diff
+*.toml text
+*.yaml text
+*.yml text
+browserslist text
+Makefile text
+makefile text
+
+# Graphics
+*.ai binary
+*.bmp binary
+*.eps binary
+*.gif binary
+*.gifv binary
+*.ico binary
+*.jng binary
+*.jp2 binary
+*.jpg binary
+*.jpeg binary
+*.jpx binary
+*.jxr binary
+*.pdf binary
+*.png binary
+*.psb binary
+*.psd binary
+*.svg text
+*.svgz binary
+*.tif binary
+*.tiff binary
+*.wbmp binary
+*.webp binary
+
+# Audio
+*.kar binary
+*.m4a binary
+*.mid binary
+*.midi binary
+*.mp3 binary
+*.ogg binary
+*.ra binary
+
+# Video
+*.3gpp binary
+*.3gp binary
+*.as binary
+*.asf binary
+*.asx binary
+*.avi binary
+*.fla binary
+*.flv binary
+*.m4v binary
+*.mng binary
+*.mov binary
+*.mp4 binary
+*.mpeg binary
+*.mpg binary
+*.ogv binary
+*.swc binary
+*.swf binary
+*.webm binary
+
+# Fonts
+*.ttf binary
+*.eot binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# Executables
+*.exe binary
+*.pyc binary 
